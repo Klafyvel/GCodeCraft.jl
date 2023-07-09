@@ -1,5 +1,7 @@
 module GCodes
 
-# Write your package code here.
+include("interface.jl")
+include("instructions.jl")
+include("gcodes.jl")
 
 end
