@@ -2,52 +2,76 @@
 Here are defined the available G-Code instructions. Please refer to [Marlin's documentation](https://marlinfw.org/meta/gcode/) for G-Code reference.
 """
 module Instructions
-@enum Prefix G M
+using Printf
+
+@enum Prefix G M T
 
 struct Instruction
     prefix::Prefix
     number::Int
+    subcommand::Int
+    complement::Union{Nothing, String}
     parameters::Dict{Symbol,Union{Nothing,Float64}}
 end
 
-######## G-Codes ########
-GCODES = Dict([
-    0  =>  ("Rapid linear move (convention: no extrusion).", "https://marlinfw.org/docs/gcode/G000-G001.html")
-    1  =>  ("Rapid movement (convention: with extrusion).", "https://marlinfw.org/docs/gcode/G000-G001.html")
-    2  =>  ("Clockwise arc move.", "https://marlinfw.org/docs/gcode/G002-G003.html")
-    3  =>  ("Counter-clockwise arc move.", "https://marlinfw.org/docs/gcode/G002-G003.html")
-    4  =>  ("Dwell pauses the command queue and waits for a period of time.", "https://marlinfw.org/docs/gcode/G004.html")
-    5  =>  ("Create a cubic B-spline in the XY plane.", "https://marlinfw.org/docs/gcode/G005.html")
-    6  =>  ("Direct Stepper Move.", "https://marlinfw.org/docs/gcode/G006.html")
-    10 => ("Retract.", "https://marlinfw.org/docs/gcode/G010.html")
-    11 => ("Recover.", "https://marlinfw.org/docs/gcode/G011.html")
-    12 => ("Clean the Nozzle.", "https://marlinfw.org/docs/gcode/G012.html")
-    17 => ("Select workspace plane XY.", "https://marlinfw.org/docs/gcode/G017-G019.html")
-    18 => ("Select workspace plane ZX.", "https://marlinfw.org/docs/gcode/G017-G019.html")
-    19 => ("Select workspace plane YZ.", "https://marlinfw.org/docs/gcode/G017-G019.html")
-    20 => ("Set Units to Inches.", "https://marlinfw.org/docs/gcode/G020.html")
-    21 => ("Set Units to Millimeters.", "https://marlinfw.org/docs/gcode/G021.html")
-    26 => ("Mesh Validation Pattern.", "https://marlinfw.org/docs/gcode/G026.html")
-    27 => ("Park the current toolhead.", "https://marlinfw.org/docs/gcode/G027.html")
-    28 => ("Auto Home.", "https://marlinfw.org/docs/gcode/G028.html")
-    29 => ("Bed Leveling.", "https://marlinfw.org/docs/gcode/G029.html")
-    30 => ("Single Z-Probe.", "https://marlinfw.org/docs/gcode/G030.html")
-    31 => ("Dock the Z probe sled.", "https://marlinfw.org/docs/gcode/G031.html")
-])
+Instruction(p, n, params) = Instruction(p, n, 0, params)
 
-for (i,doc) in GCODES
-    name = Symbol("G" * string(i))
-    documentation = """
-        G$i(;params...)
-    $(doc[1])
+prefixstring(i::Instruction) = if i.prefix == G
+    "G"
+elseif i.prefix == M
+    "M"
+else
+    "T"
+end
 
-    See [Marlin's G-Code reference]($(doc[2])).
-    """
+
+function Base.show(io::IO, instruction::Instruction)
+    print(io, prefixstring(instruction) * string(instruction.number))
+    if instruction.subcommand > 0
+        print(io, ".$(string(instruction.subcommand))")
+    elseif !isnothing(instruction.complement)
+        print(io, " $(instruction.complement)")
+    end
+    if !isempty(instruction.parameters)
+        print(io, " ")
+        parameters = [
+            string(k) * @sprintf("%1.5f", instruction.parameters[k])
+            for k in keys(instruction.parameters)
+        ]
+        print(io, join(parameters, " "))
+    end
+end
+
+CODES = include("instructions_array.jl")
+
+for code in CODES
+    name = Symbol(code.funname)
+    main_id, second_id, compl = code.identifier
+    prefix = Symbol(code.codetype)
     code = quote
-        @doc $documentation
-        $name(;params...) = Instruction(G, $i, params)
+        @doc $(code.doc)
+        $name(;params...) = Instruction($prefix, $main_id, $second_id, $compl, params)
     end
     eval(code)
+end
+
+function format(config, instruction)
+    command = prefixstring(instruction) * string(instruction.number)
+    if instruction.subcommand > 0
+        command *= ".$(string(instruction.subcommand))"
+    elseif !isnothing(instruction.complement)
+        command *= " $(instruction.complement)"
+    end
+    if !isempty(instruction.parameters)
+        command *= " "
+        formatter = Printf.Format("%1." * string(output_digits(config)) * "f")
+        parameters = [
+            string(k) * Printf.format(formatter, instruction.parameters[k])
+            for k in keys(instruction.parameters)
+        ]
+        command *= join(parameters, " ")
+    end
+    command
 end
 
 end

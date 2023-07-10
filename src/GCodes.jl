@@ -1,6 +1,6 @@
 module GCodes
 
-include("interface.jl")
+include("configurations.jl")
 include("instructions.jl")
 include("gcodes.jl")
 
