@@ -26,7 +26,6 @@ prefixstring(i::Instruction) =
         "T"
     end
 
-
 function Base.show(io::IO, instruction::Instruction)
     print(io, prefixstring(instruction) * string(instruction.number))
     if instruction.subcommand > 0
@@ -37,8 +36,8 @@ function Base.show(io::IO, instruction::Instruction)
     if !isempty(instruction.parameters)
         print(io, " ")
         parameters = [
-            string(k) * @sprintf("%1.5f", instruction.parameters[k])
-            for k in keys(instruction.parameters)
+            string(k) * @sprintf("%1.5f", instruction.parameters[k]) for
+            k in keys(instruction.parameters)
         ]
         print(io, join(parameters, " "))
     end
@@ -51,8 +50,9 @@ for code in CODES
     main_id, second_id, compl = code.identifier
     prefix = Symbol(code.codetype)
     code = quote
-        @doc $(code.doc)
-        $name(; params...) = Instruction($prefix, $main_id, $second_id, $compl, params)
+        @doc $(code.doc) function $name(; params...)
+            return Instruction($prefix, $main_id, $second_id, $compl, params)
+        end
     end
     eval(code)
 end
@@ -68,12 +68,12 @@ function format(config, instruction)
         command *= " "
         formatter = Printf.Format("%1." * string(output_digits(config)) * "f")
         parameters = [
-            string(k) * Printf.format(formatter, instruction.parameters[k])
-            for k in keys(instruction.parameters)
+            string(k) * Printf.format(formatter, instruction.parameters[k]) for
+            k in keys(instruction.parameters)
         ]
         command *= join(parameters, " ")
     end
-    command
+    return command
 end
 
 end

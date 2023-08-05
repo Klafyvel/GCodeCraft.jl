@@ -17,19 +17,20 @@ function status end
 # function clip end
 # function triangularwave end
 
-
 """
     G()
 
 A G-Code program.
 """
-mutable struct G{T, P}
+mutable struct G{T,P}
     instructions::T
     current_position::Dict{Symbol,Float64}
     current_mode::Symbol
     config::P
 end
-G(config::P=GConfiguration()) where P = G{Vector{Instructions.Instruction}, P}([], Dict(), :absolute, config)
+function G(config::P=GConfiguration()) where {P}
+    return G{Vector{Instructions.Instruction},P}([], Dict(), :absolute, config)
+end
 
 Base.push!(g, instr...) = push!(g.instructions, instr...)
 
@@ -42,10 +43,11 @@ Set current mode to absolute. If `f` is given, it will be executed ensuring curr
 
 See also [`relative!`](@ref).
 """
-absolute!(g) = if g.current_mode ≠ :absolute 
-    g.current_mode = :absolute
-    push!(g, Instructions.G91())
-end
+absolute!(g) =
+    if g.current_mode ≠ :absolute
+        g.current_mode = :absolute
+        push!(g, Instructions.G91())
+    end
 function absolute!(f, g)
     need_restore = false
     if g.current_mode ≠ :absolute
@@ -64,10 +66,11 @@ Set current mode to relative. If `f` is given, it will be executed ensuring curr
 
 See also [`absolute!`](@ref).
 """
-relative!(g) = if g.current_mode ≠ :relative 
-    g.current_mode = :relative
-    push!(g, Instructions.G90())
-end
+relative!(g) =
+    if g.current_mode ≠ :relative
+        g.current_mode = :relative
+        push!(g, Instructions.G90())
+    end
 function relative!(f, g)
     need_restore = false
     if g.current_mode ≠ :relative
@@ -80,13 +83,14 @@ function relative!(f, g)
     end
 end
 
-invert_mode!(g) = if g.current_mode == :absolute
-    relative!(g)
-else
-    absolute!(g)
-end
+invert_mode!(g) =
+    if g.current_mode == :absolute
+        relative!(g)
+    else
+        absolute!(g)
+    end
 
-const Dimension = Pair{Union{Symbol, Vector{Symbol}}, Real}
+const Dimension = Pair{Union{Symbol,Vector{Symbol}},Real}
 
 include("move.jl")
 include("rect.jl")

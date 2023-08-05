@@ -21,7 +21,10 @@ move!(g, [:Y, :V]=>[6, 0.5, -5], [:X, :U]=>[3, 4, 5], mode=:relative)
 function move! end
 
 append_movement!(d, a, m) = d[a] = collect(m)
-append_movement!(d, as::Vector, m) = for a in as append_movement(d, a, m) end
+append_movement!(d, as::Vector, m) =
+    for a in as
+        append_movement(d, a, m)
+    end
 
 function move!(g, movements...; mode=:current, rapid=false)
     if mode ≠ :current && mode ≠ g.current_mode
@@ -45,11 +48,11 @@ function move!(g, movements...; mode=:current, rapid=false)
         end
     end
     for i in 1:sequence_length
-        ax = Dict(map(x->first(x)=>last(x)[i], collect(axes)))
+        ax = Dict(map(x -> first(x) => last(x)[i], collect(axes)))
         if rapid
-            push!(g, Instructions.G0(;ax...))
+            push!(g, Instructions.G0(; ax...))
         else
-            push!(g, Instructions.G1(;ax...))
+            push!(g, Instructions.G1(; ax...))
         end
     end
 end

@@ -29,7 +29,7 @@ struct UpperLeft <: Start end
 struct UpperRight <: Start end
 
 function rect!(g, width, height; start=:ll, kw...)
-    relative!(g) do 
+    relative!(g) do
         if start == :ll
             rect!(LowerLeft(), g, width, height; kw...)
         elseif start == :lr
@@ -44,7 +44,7 @@ function rect!(g, width, height; start=:ll, kw...)
     end
 end
 
-function rect!(s::Start, g, width, height; direction=:cw, kw...) 
+function rect!(s::Start, g, width, height; direction=:cw, kw...)
     if direction == :cw
         rect!(Clockwise(), s, g, width, height; kw...)
     elseif direction == :ccw
@@ -54,14 +54,70 @@ function rect!(s::Start, g, width, height; direction=:cw, kw...)
     end
 end
 
-rect!(cw::Clockwise, ::LowerLeft, g, w, h; kw...) = move!(g, first(h)=>[last(h), 0, -last(h), 0], first(w)=>[0, last(w), 0, -last(w)]; kw...)
-rect!(cw::Clockwise, ::UpperLeft, g, width, height; kw...) = move!(g, first(h)=>[0, -last(h), 0, last(h)], first(w)=>[last(w), 0, -last(w), 0]; kw...)
-rect!(cw::Clockwise, ::UpperRight, g, width, height; kw...) = move!(g, first(h)=>[-last(h), 0, last(h), 0], first(w)=>[0, -last(w), 0, last(w)]; kw...)
-rect!(cw::Clockwise, ::LowerRight, g, width, height; kw...) = move!(g, first(h)=>[0, last(h), 0, -last(h)], first(w)=>[-last(w), 0, last(w), 0]; kw...)
+function rect!(cw::Clockwise, ::LowerLeft, g, w, h; kw...)
+    return move!(
+        g,
+        first(h) => [last(h), 0, -last(h), 0],
+        first(w) => [0, last(w), 0, -last(w)];
+        kw...,
+    )
+end
+function rect!(cw::Clockwise, ::UpperLeft, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [0, -last(h), 0, last(h)],
+        first(w) => [last(w), 0, -last(w), 0];
+        kw...,
+    )
+end
+function rect!(cw::Clockwise, ::UpperRight, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [-last(h), 0, last(h), 0],
+        first(w) => [0, -last(w), 0, last(w)];
+        kw...,
+    )
+end
+function rect!(cw::Clockwise, ::LowerRight, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [0, last(h), 0, -last(h)],
+        first(w) => [-last(w), 0, last(w), 0];
+        kw...,
+    )
+end
 
-rect!(cw::CounterClockwise, ::LowerLeft, g, w, h; kw...) = move!(g, first(h)=>[0, last(h), 0, -last(h), 0], first(w)=>[last(w), 0, -last(w), 0]; kw...)
-rect!(cw::CounterClockwise, ::UpperLeft, g, width, height; kw...) = move!(g, first(h)=>[-last(h), 0, last(h), 0], first(w)=>[0, last(w), 0, -last(w)]; kw...)
-rect!(cw::CounterClockwise, ::UpperRight, g, width, height; kw...) = move!(g, first(h)=>[0, -last(h), 0, last(h)], first(w)=>[-last(w), 0, last(w), 0]; kw...)
-rect!(cw::CounterClockwise, ::LowerRight, g, width, height; kw...) = move!(g, first(h)=>[last(h), 0, -last(h), 0], first(w)=>[0, -last(w), 0, last(w)]; kw...)
+function rect!(cw::CounterClockwise, ::LowerLeft, g, w, h; kw...)
+    return move!(
+        g,
+        first(h) => [0, last(h), 0, -last(h), 0],
+        first(w) => [last(w), 0, -last(w), 0];
+        kw...,
+    )
+end
+function rect!(cw::CounterClockwise, ::UpperLeft, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [-last(h), 0, last(h), 0],
+        first(w) => [0, last(w), 0, -last(w)];
+        kw...,
+    )
+end
+function rect!(cw::CounterClockwise, ::UpperRight, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [0, -last(h), 0, last(h)],
+        first(w) => [-last(w), 0, last(w), 0];
+        kw...,
+    )
+end
+function rect!(cw::CounterClockwise, ::LowerRight, g, width, height; kw...)
+    return move!(
+        g,
+        first(h) => [last(h), 0, -last(h), 0],
+        first(w) => [0, -last(w), 0, last(w)];
+        kw...,
+    )
+end
 
 export rect!

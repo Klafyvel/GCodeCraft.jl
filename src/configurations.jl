@@ -45,6 +45,8 @@ g = G(sp, config)
 move!(g, X=>5)
 ```
 """
-function GSerialConfiguration(;sleeptime=0.01, output=stdout, output_digits=5, buffersize=16, read_timeout=10)
-    GSerialConfiguration(sleeptime, output, buffersize, read_timeout, output_digits)
+function GSerialConfiguration(;
+    sleeptime=0.01, output=stdout, output_digits=5, buffersize=16, read_timeout=10
+)
+    return GSerialConfiguration(sleeptime, output, buffersize, read_timeout, output_digits)
 end

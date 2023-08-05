@@ -3,12 +3,10 @@ using YAML
 using JuliaFormatter
 using Dates
 
-
 dir = mktempdir()
 
 @info "Cloning Marlin's documentation" dir
 LibGit2.clone("https://github.com/MarlinFirmware/MarlinDocumentation.git", dir)
-
 
 gcodespath = joinpath(dir, "_gcode")
 
@@ -27,12 +25,12 @@ function load_file(path)
         end
         read(f, String)
     end
-    yaml["mddescr"] = md    
-    yaml
+    yaml["mddescr"] = md
+    return yaml
 end
 
 function name_to_functionname(name)
-    replace(name, "."=>"_", " "=>"_")
+    return replace(name, "." => "_", " " => "_")
 end
 
 function make_docstring(name, yaml, url)
@@ -60,13 +58,13 @@ function make_docstring(name, yaml, url)
     if "related" ∈ keys(yaml)
         if yaml["related"] isa Vector
             seealsos = ["[`$(name_to_functionname(c))`](@ref)" for c in yaml["related"]]
-            res *="\n\nSee also $(join(seealsos, ", ", " and "))."
+            res *= "\n\nSee also $(join(seealsos, ", ", " and "))."
         else
             seealsos = "[`$(name_to_functionname(yaml["related"]))`](@ref)"
-            res *="\n\nSee also $(seealsos)."
+            res *= "\n\nSee also $(seealsos)."
         end
     end
-    res
+    return res
 end
 
 function process_name(name)
@@ -83,19 +81,20 @@ function process_name(name)
     else
         (parse(Int, splitted_space[1][2:end]), 0, splitted_space[2])
     end
-    (;codetype, identifier, funname)
+    return (; codetype, identifier, funname)
 end
 
 all_codes = Dict()
 @info "Generating documentation and function names"
-for fname in readdir(gcodespath, join=true)
+for fname in readdir(gcodespath; join=true)
     yaml = load_file(fname)
     for name in yaml["codes"]
         try
-            url = "https://marlinfw.org/docs/gcode/" * splitext(basename(fname))[1] * ".html"
+            url =
+                "https://marlinfw.org/docs/gcode/" * splitext(basename(fname))[1] * ".html"
             doc = make_docstring(name, yaml, url)
             meta = process_name(name)
-            all_codes[meta.funname] = (;meta..., doc)
+            all_codes[meta.funname] = (; meta..., doc)
         catch e
             @error "On" name fname
             rethrow(e)
@@ -107,7 +106,9 @@ end
 open(joinpath("src", "instructions_array.jl"), "w") do f
     write(f, "# This file is auto-generated. Please do not edit!\n")
     write(f, "# Generation date: $(now())\n\n")
-    write(f, format_text(repr(collect(values(all_codes))[sortperm(collect(keys(all_codes)))])))
+    write(
+        f, format_text(repr(collect(values(all_codes))[sortperm(collect(keys(all_codes)))]))
+    )
 end
 
 @info "Done!"
