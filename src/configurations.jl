@@ -36,11 +36,11 @@ A configuration to stream G-Codes to a serial port.
 # Example
 
 ```
-using GCodes
+using GCodeCraft
 using LibSerialPort
 
 sp = LibSerialPort.SerialPort("/dev/ttyACM0")
-config = GCodes.GSerialConfiguration(sleeptime=0.1, read_timeout=1)
+config = GCodeCraft.GSerialConfiguration(sleeptime=0.1, read_timeout=1)
 g = G(sp, config)
 move!(g, X=>5)
 ```

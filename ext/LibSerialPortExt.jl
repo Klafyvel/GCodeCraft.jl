@@ -1,11 +1,11 @@
 module LibSerialPortExt
-using GCodes
+using GCodeCraft
 using LibSerialPort
 
 mutable struct SerialPortBuffer
-    queue::Channel{GCodes.Instructions.Instruction}
+    queue::Channel{GCodeCraft.Instructions.Instruction}
     port::LibSerialPort.SerialPort
-    config::GCodes.GSerialConfiguration
+    config::GCodeCraft.GSerialConfiguration
     received_ok::Int
     sent_instr::Int
 end
@@ -43,7 +43,7 @@ function serial_port_monitor(sp::SerialPortBuffer)
         elseif isready(sp.queue) && sp.received_ok >= sp.sent_instr
             @debug "OMG I'm gonna move" sp.received_ok sp.queue
             instr = take!(sp.queue)
-            str = GCodes.Instructions.format(sp.config, instr)
+            str = GCodeCraft.Instructions.format(sp.config, instr)
             @debug "sending"
             write(sp.port, str, "\n")
             @debug "sent"
@@ -60,7 +60,7 @@ Base.push!(spbuf::SerialPortBuffer, items...) =
         put!(spbuf.queue, i)
     end
 function SerialPortBuffer(port, config)
-    SerialPortBuffer(Channel{GCodes.Instructions.Instruction}(config.buffersize), port, config, 0, 0)
+    SerialPortBuffer(Channel{GCodeCraft.Instructions.Instruction}(config.buffersize), port, config, 0, 0)
 end
 
 """
@@ -75,19 +75,19 @@ See also [`GSerialConfiguration`](@ref).
 # Example
 
 ```
-using GCodes
+using GCodeCraft
 using LibSerialPort
 
 sp = LibSerialPort.SerialPort("/dev/ttyACM0")
-config = GCodes.GSerialConfiguration(sleeptime=0.1, read_timeout=1)
+config = GCodeCraft.GSerialConfiguration(sleeptime=0.1, read_timeout=1)
 g = G(sp, config)
 move!(g, X=>5)
 ```
 """
-function GCodes.G(sp::LibSerialPort.SerialPort, config::GCodes.GSerialConfiguration=GCodes.GSerialConfiguration())
+function GCodeCraft.G(sp::LibSerialPort.SerialPort, config::GCodeCraft.GSerialConfiguration=GCodeCraft.GSerialConfiguration())
     spbuf = SerialPortBuffer(sp, config)
     Threads.@spawn serial_port_monitor(spbuf)
-    GCodes.G{SerialPortBuffer,GCodes.GSerialConfiguration}(spbuf, Dict(), :absolute, config)
+    GCodeCraft.G{SerialPortBuffer,GCodeCraft.GSerialConfiguration}(spbuf, Dict(), :absolute, config)
 end
 
 export GSerialConfiguration

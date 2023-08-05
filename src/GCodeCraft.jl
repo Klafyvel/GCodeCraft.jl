@@ -1,4 +1,4 @@
-module GCodes
+module GCodeCraft
 
 include("configurations.jl")
 include("instructions.jl")

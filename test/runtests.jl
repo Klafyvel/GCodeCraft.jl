@@ -1,6 +1,6 @@
-using GCodes
+using GCodeCraft
 using Test
 
-@testset "GCodes.jl" begin
+@testset "GCodeCraft.jl" begin
     # Write your tests here.
 end

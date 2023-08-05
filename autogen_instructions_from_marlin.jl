@@ -48,7 +48,7 @@ function make_docstring(name, yaml, url)
     if "parameters" ∈ keys(yaml) && !isnothing(yaml["parameters"])
         res *= """
         # Marlin parameters
-        Note: these are Marlin's G-Code parameters. GCodes.jl does not inforce them.
+        Note: these are Marlin's G-Code parameters. GCodeCraft.jl does not inforce them.
         """
         for param in yaml["parameters"]
             p = "* $(param["tag"]) $(ifelse(get(param, "optional", false), "[Optional]", "")): $(get(param, "description", ""))\n"
