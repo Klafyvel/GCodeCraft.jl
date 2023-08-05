@@ -31,7 +31,7 @@ mutable struct G{T, P}
 end
 G(config::P=GConfiguration()) where P = G{Vector{Instructions.Instruction}, P}([], Dict(), :absolute, config)
 
-Base.push!(g, instr) = push!(g.instructions, instr)
+Base.push!(g, instr...) = push!(g.instructions, instr...)
 
 status(g) = g.current_position
 status(g, axis) = get(g.current_position, axis, 0.0)

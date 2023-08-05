@@ -3,6 +3,7 @@ Here are defined the available G-Code instructions. Please refer to [Marlin's do
 """
 module Instructions
 using Printf
+import ..output_digits
 
 @enum Prefix G M T
 
@@ -10,19 +11,20 @@ struct Instruction
     prefix::Prefix
     number::Int
     subcommand::Int
-    complement::Union{Nothing, String}
+    complement::Union{Nothing,String}
     parameters::Dict{Symbol,Union{Nothing,Float64}}
 end
 
 Instruction(p, n, params) = Instruction(p, n, 0, params)
 
-prefixstring(i::Instruction) = if i.prefix == G
-    "G"
-elseif i.prefix == M
-    "M"
-else
-    "T"
-end
+prefixstring(i::Instruction) =
+    if i.prefix == G
+        "G"
+    elseif i.prefix == M
+        "M"
+    else
+        "T"
+    end
 
 
 function Base.show(io::IO, instruction::Instruction)
@@ -50,7 +52,7 @@ for code in CODES
     prefix = Symbol(code.codetype)
     code = quote
         @doc $(code.doc)
-        $name(;params...) = Instruction($prefix, $main_id, $second_id, $compl, params)
+        $name(; params...) = Instruction($prefix, $main_id, $second_id, $compl, params)
     end
     eval(code)
 end
