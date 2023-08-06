@@ -28,7 +28,7 @@ let
             ],
             "\nelseif ",
         ) *
-    "else\nerror(\"Unmatched strategy.\")\nend",
+        "else\nerror(\"Unmatched strategy.\")\nend",
     )
     function_expr = quote
         function map_token_strategy(f, tokentype::TokenType, args...; kwargs...)
@@ -218,11 +218,15 @@ function parse!(
     j, prefix, prefix_num = parse_field(line, j)
     if prefix ∉ ("G", "M", "T")
         parse_error(
-            prefix_token.linenum, prefix_token.charnum, "Instruction prefix unrecognized \"$(prefix_token.string)\"."
+            prefix_token.linenum,
+            prefix_token.charnum,
+            "Instruction prefix unrecognized \"$(prefix_token.string)\".",
         )
     elseif isnothing(prefix_num)
         parse_error(
-            prefix_token.linenum, prefix_token.charnum, "Instruction prefix not followed by instruction number."
+            prefix_token.linenum,
+            prefix_token.charnum,
+            "Instruction prefix not followed by instruction number.",
         )
     end
     number, subcommand = parse_prefix_num(prefix_num)

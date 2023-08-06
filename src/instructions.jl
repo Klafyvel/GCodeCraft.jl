@@ -44,11 +44,11 @@ function Base.show(io::IO, instruction::Instruction)
     if !isempty(instruction.parameters)
         print(io, " ")
         parameters = Vector{String}(undef, length(instruction.parameters))
-        for (i,k) in enumerate(keys(instruction.parameters))
+        for (i, k) in enumerate(keys(instruction.parameters))
             if isnothing(instruction.parameters[k])
                 parameters[i] = string(k)
             else
-                parameters[i] = string(round(instruction.parameters[k]::Float64, digits=5))
+                parameters[i] = string(round(instruction.parameters[k]::Float64; digits=5))
             end
         end
         print(io, join(parameters, " "))
@@ -81,7 +81,14 @@ function format(config, instruction::Instruction)
             if isnothing(instruction.parameters[k])
                 push!(command, " " * string(k))
             else
-                push!(command, " "*string(round(instruction.parameters[k]::Float64, digits=output_digits(config))))
+                push!(
+                    command,
+                    " " * string(
+                        round(
+                            instruction.parameters[k]::Float64; digits=output_digits(config)
+                        ),
+                    ),
+                )
             end
         end
     end
