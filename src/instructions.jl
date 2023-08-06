@@ -17,13 +17,14 @@ end
 
 Instruction(p, n, params) = Instruction(p, n, 0, nothing, params)
 
-prefix(p::String) = if p == "G"
-    G
-elseif p == "M"
-    M
-else
-    "T"
-end
+prefix(p::String) =
+    if p == "G"
+        G
+    elseif p == "M"
+        M
+    else
+        "T"
+    end
 
 prefixstring(i::Instruction) =
     if i.prefix == G

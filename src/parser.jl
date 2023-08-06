@@ -12,27 +12,32 @@ parse_error(linenum, charnum, msg) = error("$linenum:$charnum : $msg")
 abstract type TokenStrategy end
 let
     tokentypes = string.(instances(TokenType))
-strategy_names = [
-    Symbol(string(Symbol(tokentype)) * "Strategy")
-    for tokentype in tokentypes
-]
-to_be_evaluated = [
-    quote
-        struct $strategy <: TokenStrategy end
+    strategy_names = [
+        Symbol(string(Symbol(tokentype)) * "Strategy") for tokentype in tokentypes
+    ]
+    to_be_evaluated = [
+        quote
+            struct $strategy <: TokenStrategy end
+        end for strategy in strategy_names
+    ]
+    switch_case = Meta.parse(
+        "if " *
+        join(
+            [
+                " tokentype == $tokentype f($strategy(), args...; kwargs...)" for
+                (tokentype, strategy) in zip(tokentypes, strategy_names)
+            ],
+            "\nelseif ",
+        ) *
+        "\nend",
+    )
+    function_expr = quote
+        function map_token_strategy(f, tokentype::TokenType, args...; kwargs...)
+            return $(switch_case)
+        end
     end
-    for strategy in strategy_names
-]
-switch_case = Meta.parse("if " * join([
-    " tokentype == $tokentype f($strategy(), args...; kwargs...)"
-    for (tokentype,strategy) in zip(tokentypes, strategy_names)
-        ], "\nelseif ") * "\nend")
-function_expr = quote
-    function map_token_strategy(f, tokentype::TokenType, args...; kwargs...)
-        $(switch_case)
-    end
-end
-push!(to_be_evaluated, function_expr)
-eval.(to_be_evaluated)
+    push!(to_be_evaluated, function_expr)
+    eval.(to_be_evaluated)
 end
 
 struct Token
@@ -45,7 +50,7 @@ Base.length(t::Token) = length(t.string)
 
 function tokenize(::FieldNameStrategy, input, i, args...)
     fieldname = input[i:i]
-    Token(FieldName, fieldname, args...)
+    return Token(FieldName, fieldname, args...)
 end
 function tokenize(::FieldValueStrategy, input, i, args...)
     j = nextind(input, i)
@@ -57,7 +62,7 @@ function tokenize(::FieldValueStrategy, input, i, args...)
         j = nextind(input, j)
     end
     value = input[i:j]
-    Token(FieldValue, value, args...)
+    return Token(FieldValue, value, args...)
 end
 function tokenize(::SpaceStrategy, input, i, args...)
     j = nextind(input, i)
@@ -69,15 +74,15 @@ function tokenize(::SpaceStrategy, input, i, args...)
         j = nextind(input, j)
     end
     value = input[i:j]
-    Token(Space, value, args...)
+    return Token(Space, value, args...)
 end
 function tokenize(::CommaStrategy, input, i, args...)
     comma = input[i:i]
-    Token(Comma, comma, args...)
+    return Token(Comma, comma, args...)
 end
 function tokenize(::StarStrategy, input, i, args...)
     star = input[i:i]
-    Token(Star, star, args...)
+    return Token(Star, star, args...)
 end
 function tokenize(::NewLineStrategy, input, i, args...)
     j = nextind(input, i)
@@ -89,7 +94,7 @@ function tokenize(::NewLineStrategy, input, i, args...)
         j = nextind(input, j)
     end
     value = input[i:j]
-    Token(NewLine, value, args...)
+    return Token(NewLine, value, args...)
 end
 function tokenize(::CommentStrategy, input, i, args...)
     j = nextind(input, i)
@@ -101,7 +106,7 @@ function tokenize(::CommentStrategy, input, i, args...)
         j = nextind(input, j)
     end
     value = input[i:j]
-    Token(Comment, value, args...)
+    return Token(Comment, value, args...)
 end
 function tokenize(input)
     linenum = 1
@@ -110,12 +115,17 @@ function tokenize(input)
     lasttokentype = NewLine
     tokens = Token[]
     while i <= lastindex(input)
-        tokentype = if input[i] == ';' Comment
-        elseif input[i] == '\n' NewLine
-        elseif input[i] == '*' Star
-        elseif input[i] == ',' Comma
-        elseif input[i] == ' ' Space
-        elseif lasttokentype ∈ (NewLine, Space) && input[i] ∈ "GMTSXYZUVWIJDHFRQEN" 
+        tokentype = if input[i] == ';'
+            Comment
+        elseif input[i] == '\n'
+            NewLine
+        elseif input[i] == '*'
+            Star
+        elseif input[i] == ','
+            Comma
+        elseif input[i] == ' '
+            Space
+        elseif lasttokentype ∈ (NewLine, Space) && input[i] ∈ "GMTSXYZUVWIJDHFRQEN"
             FieldName
         elseif lasttokentype == FieldName
             FieldValue
@@ -133,7 +143,7 @@ function tokenize(input)
         push!(tokens, token)
         lasttokentype = tokentype
     end
-    tokens
+    return tokens
 end
 
 function nextline(tokens, i)
@@ -145,7 +155,7 @@ function nextline(tokens, i)
             break
         end
     end
-    line
+    return line
 end
 
 function parse_field(line, i)
@@ -175,7 +185,7 @@ function parse_prefix_num(prefix_num)
     if length(splitted) == 1
         (Base.parse(Int, prefix_num), 0)
     else
-        number,subcommand = parse.(Int, splitted)
+        number, subcommand = parse.(Int, splitted)
         (number, subcommand)
     end
 end
@@ -196,10 +206,12 @@ function Base.parse(::Type{Instructions.Instruction}, input)
     p = Instructions.Instruction[]
     tokens = tokenize(input)
     parse!(Instructions.Instruction, tokens, p)
-    first(p)
+    return first(p)
 end
 
-function parse!(::Type{Instructions.Instruction}, tokens::Vector{Token}, target, i=firstindex(tokens))
+function parse!(
+    ::Type{Instructions.Instruction}, tokens::Vector{Token}, target, i=firstindex(tokens)
+)
     line = nextline(tokens, i)
     j = firstindex(line)
     prefix_token = line[j]
@@ -207,32 +219,33 @@ function parse!(::Type{Instructions.Instruction}, tokens::Vector{Token}, target,
         # Comments are ignored for now
         return i + length(line) + 1
     end
-    j,prefix,prefix_num = parse_field(line, j)
+    j, prefix, prefix_num = parse_field(line, j)
     if prefix ∉ ("G", "M", "T")
-        parse_error(linenum, charnum, "Instruction prefix unrecognized \"$(prefix_token.string)\".")
+        parse_error(
+            linenum, charnum, "Instruction prefix unrecognized \"$(prefix_token.string)\"."
+        )
     elseif isnothing(prefix_num)
-        parse_error(linenum, charnum, "Instruction prefix not followed by instruction number.")
+        parse_error(
+            linenum, charnum, "Instruction prefix not followed by instruction number."
+        )
     end
     number, subcommand = parse_prefix_num(prefix_num)
-    parameters = Dict{Symbol, Union{Nothing, Float64}}()
-    while j≤lastindex(line) && line[j].type ≠ Comment
+    parameters = Dict{Symbol,Union{Nothing,Float64}}()
+    while j ≤ lastindex(line) && line[j].type ≠ Comment
         if line[j].type == Space
             j = nextind(line, j)
             continue
         end
-        j,fieldname,fieldparam = parse_field(line, j)
-        parameters[Symbol(prefix)] = isnothing(fieldparam) ? fieldparam : Base.parse(Float64, fieldparam)
+        j, fieldname, fieldparam = parse_field(line, j)
+        parameters[Symbol(prefix)] =
+            isnothing(fieldparam) ? fieldparam : Base.parse(Float64, fieldparam)
     end
     instruction = Instructions.Instruction(
-    Instructions.prefix(prefix),
-    number,
-    subcommand,
-    nothing,
-    parameters
+        Instructions.prefix(prefix), number, subcommand, nothing, parameters
     )
     @debug "Pushing instruction" instruction
     push!(target, instruction)
-    i + length(line) + 1
+    return i + length(line) + 1
 end
 
 function parse!(::Type{G}, input, target)
@@ -241,7 +254,7 @@ function parse!(::Type{G}, input, target)
     while i < lastindex(tokens)
         i = parse!(Instructions.Instruction, tokens, target, i)
     end
-    target
+    return target
 end
 
 end
