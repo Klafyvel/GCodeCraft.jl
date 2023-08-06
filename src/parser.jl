@@ -60,7 +60,11 @@ function tokenize(::FieldValueStrategy, input, i, args...)
         end
         j = nextind(input, j)
     end
-    value = input[i:j]
+    value = if j > lastindex(input)
+        input[i:end]
+    else
+        input[i:j]
+    end
     return Token(FieldValue, value, args...)
 end
 function tokenize(::SpaceStrategy, input, i, args...)
@@ -72,7 +76,11 @@ function tokenize(::SpaceStrategy, input, i, args...)
         end
         j = nextind(input, j)
     end
-    value = input[i:j]
+    value = if j > lastindex(input)
+        input[i:end]
+    else
+        input[i:j]
+    end
     return Token(Space, value, args...)
 end
 function tokenize(::CommaStrategy, input, i, args...)
@@ -92,7 +100,11 @@ function tokenize(::NewLineStrategy, input, i, args...)
         end
         j = nextind(input, j)
     end
-    value = input[i:j]
+    value = if j > lastindex(input)
+        input[i:end]
+    else
+        input[i:j]
+    end
     return Token(NewLine, value, args...)
 end
 function tokenize(::CommentStrategy, input, i, args...)
@@ -104,7 +116,11 @@ function tokenize(::CommentStrategy, input, i, args...)
         end
         j = nextind(input, j)
     end
-    value = input[i:j]
+    value = if j > lastindex(input)
+        input[i:end]
+    else
+        input[i:j]
+    end
     return Token(Comment, value, args...)
 end
 function tokenize(input)
