@@ -3,7 +3,6 @@ A very basic G-Code parser
 """
 module Parser
 using ..Instructions
-import ..G
 
 parse_error(linenum, charnum, msg) = error("$linenum:$charnum : $msg")
 
@@ -190,25 +189,6 @@ function parse_prefix_num(prefix_num)
     end
 end
 
-"""
-    parse(G, input)
-
-Parse the `input` string into a new `G` program.
-"""
-Base.parse(::Type{G}, input) = parse!(G, input, G())
-"""
-    parse(g, input)
-
-Parse the `input` string to GCode instructions and push it to the program `g`.
-"""
-Base.parse(g::G, input) = parse!(G, input, g)
-function Base.parse(::Type{Instructions.Instruction}, input)
-    p = Instructions.Instruction[]
-    tokens = tokenize(input)
-    parse!(Instructions.Instruction, tokens, p)
-    return first(p)
-end
-
 function parse!(
     ::Type{Instructions.Instruction}, tokens::Vector{Token}, target, i=firstindex(tokens)
 )
@@ -248,7 +228,7 @@ function parse!(
     return i + length(line) + 1
 end
 
-function parse!(::Type{G}, input, target)
+function parse!(input, target)
     tokens = tokenize(input)
     i = 1
     while i < lastindex(tokens)
