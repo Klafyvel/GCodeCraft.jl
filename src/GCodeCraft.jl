@@ -1,5 +1,7 @@
 module GCodeCraft
 
+using PrecompileTools
+
 include("configurations.jl")
 include("instructions.jl")
 include("parser.jl")
@@ -43,4 +45,15 @@ end
 
 export @G_str, @GCode_str
 
+@setup_workload begin
+    # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    s = """
+    G01 X6.7 Y7
+    G28 ; Go home.
+    """
+    @compile_workload begin
+        parse(G, s)
+    end
+end
 end
