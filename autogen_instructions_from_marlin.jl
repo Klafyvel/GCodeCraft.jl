@@ -106,6 +106,7 @@ end
 open(joinpath("src", "instructions_array.jl"), "w") do f
     write(f, "# This file is auto-generated. Please do not edit!\n")
     write(f, "# Generation date: $(now())\n\n")
+    write(f, "CODES = ")
     write(
         f, format_text(repr(collect(values(all_codes))[sortperm(collect(keys(all_codes)))]))
     )

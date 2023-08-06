@@ -23,7 +23,7 @@ function move! end
 append_movement!(d, a, m) = d[a] = collect(m)
 append_movement!(d, as::Vector, m) =
     for a in as
-        append_movement(d, a, m)
+        append_movement!(d, a, m)
     end
 
 function move!(g, movements...; mode=:current, rapid=false)

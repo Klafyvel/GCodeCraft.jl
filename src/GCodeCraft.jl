@@ -10,13 +10,13 @@ include("gcodes.jl")
 
 Parse the `input` string into a new `G` program.
 """
-Base.parse(::Type{G}, input) = Parser.parse!(G, input, G())
+Base.parse(::Type{G}, input) = Parser.parse!(input, G())
 """
     parse(g, input)
 
 Parse the `input` string to GCode instructions and push it to the program `g`.
 """
-Base.parse(g::G, input) = parse!(G, input, g)
+Base.parse(g::G, input) = Parser.parse!(input, g)
 function Base.parse(::Type{Instructions.Instruction}, input)
     p = Instructions.Instruction[]
     tokens = Parser.tokenize(input)

@@ -28,7 +28,7 @@ let
             ],
             "\nelseif ",
         ) *
-        "\nend",
+    "else\nerror(\"Unmatched strategy.\")\nend",
     )
     function_expr = quote
         function map_token_strategy(f, tokentype::TokenType, args...; kwargs...)
@@ -160,18 +160,18 @@ end
 function parse_field(line, i)
     token = line[i]
     if token.type != FieldName
-        parse_error(linenum, charnum, "Expected a field name")
+        parse_error(token.linenum, token.charnum, "Expected a field name")
     end
     name = token.string
     i = nextind(line, i)
     if i > lastindex(line)
-        parse_error(linenum, charnum, "Line ended to soon.")
+        parse_error(token.linenum, token.charnum, "Line ended to soon.")
     end
     token = line[i]
     if token.type == Space
         (i, name, nothing)
     elseif token.type != FieldValue
-        parse_error(linenum, charnum, "Expected a field name or a space.")
+        parse_error(token.linenum, token.charnum, "Expected a field name or a space.")
     else
         value = token.string
         i = nextind(line, i)
@@ -202,11 +202,11 @@ function parse!(
     j, prefix, prefix_num = parse_field(line, j)
     if prefix ∉ ("G", "M", "T")
         parse_error(
-            linenum, charnum, "Instruction prefix unrecognized \"$(prefix_token.string)\"."
+            prefix_token.linenum, prefix_token.charnum, "Instruction prefix unrecognized \"$(prefix_token.string)\"."
         )
     elseif isnothing(prefix_num)
         parse_error(
-            linenum, charnum, "Instruction prefix not followed by instruction number."
+            prefix_token.linenum, prefix_token.charnum, "Instruction prefix not followed by instruction number."
         )
     end
     number, subcommand = parse_prefix_num(prefix_num)
@@ -217,7 +217,7 @@ function parse!(
             continue
         end
         j, fieldname, fieldparam = parse_field(line, j)
-        parameters[Symbol(prefix)] =
+        parameters[Symbol(fieldname)] =
             isnothing(fieldparam) ? fieldparam : Base.parse(Float64, fieldparam)
     end
     instruction = Instructions.Instruction(
