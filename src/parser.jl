@@ -16,19 +16,19 @@ let
     ]
     to_be_evaluated = [
         quote
-            struct $strategy <: TokenStrategy end
-        end for strategy in strategy_names
+                struct $strategy <: TokenStrategy end
+            end for strategy in strategy_names
     ]
     switch_case = Meta.parse(
         "if " *
-        join(
+            join(
             [
                 " tokentype == $tokentype f($strategy(), args...; kwargs...)" for
-                (tokentype, strategy) in zip(tokentypes, strategy_names)
+                    (tokentype, strategy) in zip(tokentypes, strategy_names)
             ],
             "\nelseif ",
         ) *
-        "else\nerror(\"Unmatched strategy.\")\nend",
+            "else\nerror(\"Unmatched strategy.\")\nend",
     )
     function_expr = quote
         function map_token_strategy(f, tokentype::TokenType, args...; kwargs...)
@@ -184,7 +184,7 @@ function parse_field(line, i)
         parse_error(token.linenum, token.charnum, "Line ended to soon.")
     end
     token = line[i]
-    if token.type == Space
+    return if token.type == Space
         (i, name, nothing)
     elseif token.type != FieldValue
         parse_error(token.linenum, token.charnum, "Expected a field name or a space.")
@@ -197,7 +197,7 @@ end
 
 function parse_prefix_num(prefix_num)
     splitted = split(prefix_num, ".")
-    if length(splitted) == 1
+    return if length(splitted) == 1
         (Base.parse(Int, prefix_num), 0)
     else
         number, subcommand = parse.(Int, splitted)
@@ -206,8 +206,8 @@ function parse_prefix_num(prefix_num)
 end
 
 function parse!(
-    ::Type{Instructions.Instruction}, tokens::Vector{Token}, target, i=firstindex(tokens)
-)
+        ::Type{Instructions.Instruction}, tokens::Vector{Token}, target, i = firstindex(tokens)
+    )
     line = nextline(tokens, i)
     j = firstindex(line)
     prefix_token = line[j]
@@ -230,7 +230,7 @@ function parse!(
         )
     end
     number, subcommand = parse_prefix_num(prefix_num)
-    parameters = Dict{Symbol,Union{Nothing,Float64}}()
+    parameters = Dict{Symbol, Union{Nothing, Float64}}()
     while j ≤ lastindex(line) && line[j].type ≠ Comment
         if line[j].type == Space
             j = nextind(line, j)

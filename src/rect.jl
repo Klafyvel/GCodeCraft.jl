@@ -28,8 +28,8 @@ struct LowerRight <: Start end
 struct UpperLeft <: Start end
 struct UpperRight <: Start end
 
-function rect!(g, width, height; start=:ll, kw...)
-    relative!(g) do
+function rect!(g, width, height; start = :ll, kw...)
+    return relative!(g) do
         if start == :ll
             rect!(LowerLeft(), g, width, height; kw...)
         elseif start == :lr
@@ -44,8 +44,8 @@ function rect!(g, width, height; start=:ll, kw...)
     end
 end
 
-function rect!(s::Start, g, width, height; direction=:cw, kw...)
-    if direction == :cw
+function rect!(s::Start, g, width, height; direction = :cw, kw...)
+    return if direction == :cw
         rect!(Clockwise(), s, g, width, height; kw...)
     elseif direction == :ccw
         rect!(CounterClockwise(), s, g, width, height; kw...)

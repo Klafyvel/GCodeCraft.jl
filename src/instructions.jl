@@ -10,29 +10,29 @@ struct Instruction
     prefix::Prefix
     number::Int
     subcommand::Int
-    complement::Union{Nothing,String}
-    parameters::Dict{Symbol,Union{Nothing,Float64}}
+    complement::Union{Nothing, String}
+    parameters::Dict{Symbol, Union{Nothing, Float64}}
 end
 
 Instruction(p, n, params) = Instruction(p, n, 0, nothing, params)
 
 prefix(p::String) =
-    if p == "G"
-        G
-    elseif p == "M"
-        M
-    else
-        T
-    end
+if p == "G"
+    G
+elseif p == "M"
+    M
+else
+    T
+end
 
 prefixstring(i::Instruction) =
-    if i.prefix == G
-        "G"
-    elseif i.prefix == M
-        "M"
-    else
-        "T"
-    end
+if i.prefix == G
+    "G"
+elseif i.prefix == M
+    "M"
+else
+    "T"
+end
 
 function Base.show(io::IO, instruction::Instruction)
     print(io, prefixstring(instruction) * string(instruction.number))
@@ -41,14 +41,14 @@ function Base.show(io::IO, instruction::Instruction)
     elseif !isnothing(instruction.complement)
         print(io, " $(instruction.complement)")
     end
-    if !isempty(instruction.parameters)
+    return if !isempty(instruction.parameters)
         print(io, " ")
         parameters = Vector{String}(undef, length(instruction.parameters))
         for (i, k) in enumerate(keys(instruction.parameters))
             if isnothing(instruction.parameters[k])
                 parameters[i] = string(k)
             else
-                parameters[i] = string(round(instruction.parameters[k]::Float64; digits=5))
+                parameters[i] = string(round(instruction.parameters[k]::Float64; digits = 5))
             end
         end
         print(io, join(parameters, " "))
@@ -85,7 +85,7 @@ function format(config, instruction::Instruction)
                     command,
                     " " * string(
                         round(
-                            instruction.parameters[k]::Float64; digits=output_digits(config)
+                            instruction.parameters[k]::Float64; digits = output_digits(config)
                         ),
                     ),
                 )

@@ -23,10 +23,10 @@ function move! end
 append_movement!(d, a, m) = d[a] = collect(m)
 append_movement!(d, as::Vector, m) =
     for a in as
-        append_movement!(d, a, m)
-    end
+    append_movement!(d, a, m)
+end
 
-function move!(g, movements...; mode=:current, rapid=false)
+function move!(g, movements...; mode = :current, rapid = false)
     if mode ≠ :current && mode ≠ g.current_mode
         invert_mode!(g)
     end
@@ -55,6 +55,7 @@ function move!(g, movements...; mode=:current, rapid=false)
             push!(g, Instructions.G1(; ax...))
         end
     end
+    return
 end
 
 export move!

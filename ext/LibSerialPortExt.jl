@@ -15,7 +15,7 @@ function serial_port_monitor(sp::SerialPortBuffer)
         try
             open(sp.port)
             set_speed(sp.port, 250000)
-            set_frame(sp.port; ndatabits=8, parity=SP_PARITY_NONE, nstopbits=1)
+            set_frame(sp.port; ndatabits = 8, parity = SP_PARITY_NONE, nstopbits = 1)
         catch e
             @error "Could not open serial port." e
             rethrow(e)
@@ -26,7 +26,7 @@ function serial_port_monitor(sp::SerialPortBuffer)
     while isopen(sp.port)
         if bytesavailable(sp.port) > 0
             line = try
-                readline(sp.port; keep=true)
+                readline(sp.port; keep = true)
             catch e
                 @error "Error while readline" e
                 if !(e isa LibSerialPort.Timeout)
@@ -53,12 +53,12 @@ function serial_port_monitor(sp::SerialPortBuffer)
         end
     end
     close(sp)
-    @debug "Serial port monitoring says goodbye."
+    return @debug "Serial port monitoring says goodbye."
 end
 Base.push!(spbuf::SerialPortBuffer, items...) =
     for i in items
-        put!(spbuf.queue, i)
-    end
+    put!(spbuf.queue, i)
+end
 function SerialPortBuffer(port, config)
     return SerialPortBuffer(
         Channel{GCodeCraft.Instructions.Instruction}(config.buffersize), port, config, 0, 0
@@ -87,12 +87,12 @@ move!(g, X=>5)
 ```
 """
 function GCodeCraft.G(
-    sp::LibSerialPort.SerialPort,
-    config::GCodeCraft.GSerialConfiguration=GCodeCraft.GSerialConfiguration(),
-)
+        sp::LibSerialPort.SerialPort,
+        config::GCodeCraft.GSerialConfiguration = GCodeCraft.GSerialConfiguration(),
+    )
     spbuf = SerialPortBuffer(sp, config)
     Threads.@spawn serial_port_monitor(spbuf)
-    return GCodeCraft.G{SerialPortBuffer,GCodeCraft.GSerialConfiguration}(
+    return GCodeCraft.G{SerialPortBuffer, GCodeCraft.GSerialConfiguration}(
         spbuf, Dict(), :absolute, config
     )
 end

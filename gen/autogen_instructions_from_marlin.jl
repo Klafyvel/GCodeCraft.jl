@@ -5,9 +5,11 @@ using Dates
 
 dir = mktempdir()
 repository = "https://github.com/MarlinFirmware/MarlinDocumentation.git"
-blacklist = Set([
-  "T?", "Tc", "Tx"
-])
+blacklist = Set(
+    [
+        "T?", "Tc", "Tx",
+    ]
+)
 
 @info "Cloning Marlin's documentation" dir
 LibGit2.clone(repository, dir)
