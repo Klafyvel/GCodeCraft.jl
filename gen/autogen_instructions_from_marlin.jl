@@ -1,12 +1,17 @@
 using LibGit2
 using YAML
-using JuliaFormatter
+using Runic
 using Dates
 
 dir = mktempdir()
+repository = "https://github.com/MarlinFirmware/MarlinDocumentation.git"
+blacklist = Set([
+  "T?", "Tc", "Tx"
+])
 
 @info "Cloning Marlin's documentation" dir
-LibGit2.clone("https://github.com/MarlinFirmware/MarlinDocumentation.git", dir)
+LibGit2.clone(repository, dir)
+head = LibGit2.head(dir)
 
 gcodespath = joinpath(dir, "_gcode")
 
@@ -86,9 +91,12 @@ end
 
 all_codes = Dict()
 @info "Generating documentation and function names"
-for fname in readdir(gcodespath; join=true)
+for fname in readdir(gcodespath; join = true)
     yaml = load_file(fname)
     for name in yaml["codes"]
+        if name in blacklist
+            continue
+        end
         try
             url =
                 "https://marlinfw.org/docs/gcode/" * splitext(basename(fname))[1] * ".html"
@@ -104,12 +112,25 @@ end
 
 @info "Exporting to src/instructions_array.jl"
 open(joinpath("src", "instructions_array.jl"), "w") do f
-    write(f, "# This file is auto-generated. Please do not edit!\n")
-    write(f, "# Generation date: $(now())\n\n")
-    write(f, "CODES = ")
-    write(
-        f, format_text(repr(collect(values(all_codes))[sortperm(collect(keys(all_codes)))]))
-    )
+    io = IOBuffer()
+    write(io, "# This file is auto-generated. Please do not edit!\n")
+    write(io, "# Source repository: $repository\n")
+    write(io, "# Generated from commit: $head\n\n")
+    write(io, "CODES = [")
+    codes = sort(collect(keys(all_codes)))
+    for code in codes
+        write(io, "(")
+        gcode = all_codes[code]
+        for k in keys(gcode)
+            write(io, k)
+            write(io, " = ")
+            write(io, repr(getproperty(gcode, k)))
+            write(io, ",\n")
+        end
+        write(io, "),\n")
+    end
+    write(io, "]\n")
+    write(f, Runic.format_string(String(take!(io))))
 end
 
 @info "Done!"
